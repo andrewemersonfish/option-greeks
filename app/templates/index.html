@@ -1,0 +1,82 @@
+<!-- templates/index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Option Greeks Calculator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        form {
+            margin-bottom: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <h1>Option Greeks Calculator</h1>
+    <form action="/calculate_greeks" method="post">
+        <label for="option_contract">Option Contract:</label>
+        <input type="text" id="option_contract" name="option_contract" required>
+        <button type="submit">Calculate Greeks</button>
+    </form>
+
+    {% if result %}
+    <h2>Results:</h2>
+    <table>
+        <tr>
+            <th>Metric</th>
+            <th>Value</th>
+        </tr>
+        <tr>
+            <td>Delta Coefficient</td>
+            <td>{{ result.delta_coefficient }}</td>
+        </tr>
+        <tr>
+            <td>Theta Coefficient (per hour)</td>
+            <td>{{ result.theta_coefficient_per_hour }}</td>
+        </tr>
+        <tr>
+            <td>Theta Percentage (per hour)</td>
+            <td>{{ result.theta_percentage_per_hour }}</td>
+        </tr>
+        <tr>
+            <td>R-squared</td>
+            <td>{{ result.r_squared }}</td>
+        </tr>
+    </table>
+
+    <h3>Data Preview:</h3>
+    <table>
+        <tr>
+            {% for key in result.data_preview[0].keys() %}
+            <th>{{ key }}</th>
+            {% endfor %}
+        </tr>
+        {% for row in result.data_preview %}
+        <tr>
+            {% for value in row.values() %}
+            <td>{{ value }}</td>
+            {% endfor %}
+        </tr>
+        {% endfor %}
+    </table>
+    {% endif %}
+</body>
+</html>

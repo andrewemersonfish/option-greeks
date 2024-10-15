@@ -1,0 +1,11 @@
+fastapi
+uvicorn
+pandas
+numpy
+scikit-learn
+datetime
+requests
+python-multipart
+polygon-api-client
+python-dotenv
+jinja2
