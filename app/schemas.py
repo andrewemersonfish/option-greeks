@@ -16,3 +16,6 @@ class OptionGreeksResponse(BaseModel):
     root_mean_squared_error: float
     r_squared: float
     data_preview: List[Dict[str, Any]]
+    premium_ratio: float
+    estimated_premium: float
+    snapshot_data: Dict[str, Any]

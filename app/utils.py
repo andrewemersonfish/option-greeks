@@ -1,7 +1,7 @@
 # utils.py
 import pandas as pd
 from datetime import datetime, timedelta
-from typing import Tuple
+from typing import Tuple, Dict, Any
 from polygon import RESTClient
 import os
 import re
@@ -49,14 +49,15 @@ def parse_option_ticker(option_ticker: str) -> Tuple[str, str, str, float]:
 
 def fetch_underlying_data(client: RESTClient, underlying_symbol: str, start_date: str, end_date: str) -> pd.DataFrame:
     """
-    Fetch historical data for the underlying asset using Polygon API.
+    Fetch historical data for the underlying asset using Polygon API with 1-minute bars.
     """
-    aggs = client.get_aggs(ticker=underlying_symbol, multiplier=1, timespan="hour", from_=start_date, to=end_date, adjusted=True, limit=5000)
+    aggs = client.get_aggs(ticker=underlying_symbol, multiplier=1, timespan="minute", from_=start_date, to=end_date, adjusted=True, limit=50000)
     data = []
     for agg in aggs:
         data.append({
             'timestamp': pd.to_datetime(agg.timestamp, unit='ms'),
-            'underlying_price': agg.close
+            'underlying_price': agg.close,
+            'underlying_volume': agg.volume
         })
     df = pd.DataFrame(data)
     if df.empty:
@@ -66,20 +67,40 @@ def fetch_underlying_data(client: RESTClient, underlying_symbol: str, start_date
 
 def fetch_option_data(client: RESTClient, option_ticker: str, start_date: str, end_date: str) -> pd.DataFrame:
     """
-    Fetch historical data for the option contract using Polygon API.
+    Fetch historical data for the option contract using Polygon API with 1-minute bars.
     """
-    aggs = client.get_aggs(ticker=option_ticker, multiplier=1, timespan="hour", from_=start_date, to=end_date, adjusted=True, limit=5000)
+    aggs = client.get_aggs(ticker=option_ticker, multiplier=1, timespan="minute", from_=start_date, to=end_date, adjusted=True, limit=50000)
     data = []
     for agg in aggs:
         data.append({
             'timestamp': pd.to_datetime(agg.timestamp, unit='ms'),
-            'option_price': agg.close
+            'option_price': agg.close,
+            'option_volume': agg.volume
         })
     df = pd.DataFrame(data)
     if df.empty:
         return pd.DataFrame()
     df.set_index('timestamp', inplace=True)
     return df
+
+def get_option_snapshot(client: RESTClient, option_ticker: str) -> Dict[str, Any]:
+    """
+    Get the latest snapshot data for the option contract.
+    """
+    underlying_symbol, _, _, _ = parse_option_ticker(option_ticker)
+    snapshot = client.get_snapshot_option(underlying_symbol, option_ticker)
+    if snapshot:
+        return {
+            'underlying_price': snapshot.underlying_asset.price,
+            'option_price': snapshot.last_trade.price if snapshot.last_trade else None,
+            'greeks': {
+                'delta': snapshot.greeks.delta if snapshot.greeks else None,
+                'gamma': snapshot.greeks.gamma if snapshot.greeks else None,
+                'theta': snapshot.greeks.theta if snapshot.greeks else None,
+                'vega': snapshot.greeks.vega if snapshot.greeks else None
+            }
+        }
+    return {}
 
 def calculate_time_to_expiration(expiration_date: str, timestamps: pd.DatetimeIndex) -> pd.Series:
     """

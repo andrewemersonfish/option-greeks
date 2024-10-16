@@ -27,18 +27,57 @@
         th {
             background-color: #f2f2f2;
         }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        input[type="text"], input[type="date"], select {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
     </style>
 </head>
 <body>
     <h1>Option Greeks Calculator</h1>
     <form action="/calculate_greeks" method="post">
-        <label for="option_contract">Option Contract:</label>
-        <input type="text" id="option_contract" name="option_contract" required>
+        <div class="form-group">
+            <label for="ticker">Underlying Ticker:</label>
+            <input type="text" id="ticker" name="ticker" required>
+        </div>
+        <div class="form-group">
+            <label for="strike">Strike Price:</label>
+            <input type="number" id="strike" name="strike" step="0.01" required>
+        </div>
+        <div class="form-group">
+            <label for="expiration">Expiration Date:</label>
+            <input type="date" id="expiration" name="expiration" required>
+        </div>
+        <div class="form-group">
+            <label for="option_type">Option Type:</label>
+            <select id="option_type" name="option_type" required>
+                <option value="call">Call</option>
+                <option value="put">Put</option>
+            </select>
+        </div>
         <button type="submit">Calculate Greeks</button>
     </form>
 
     {% if result %}
-    <h2>Results:</h2>
+    <h2>Results</h2>
     <table>
         <tr>
             <th>Metric</th>
@@ -54,26 +93,51 @@
         </tr>
         <tr>
             <td>Theta Percentage (per hour)</td>
-            <td>{{ result.theta_percentage_per_hour }}</td>
+            <td>{{ result.theta_percentage_per_hour }}%</td>
         </tr>
         <tr>
             <td>R-squared</td>
             <td>{{ result.r_squared }}</td>
         </tr>
+        <!-- Added metrics -->
+        <tr>
+            <td>Premium Ratio</td>
+            <td>{{ result.premium_ratio | round(4) }}</td>
+        </tr>
+        <tr>
+            <td>Estimated Premium</td>
+            <td>{{ result.estimated_premium | round(4) }}</td>
+        </tr>
+        <tr>
+            <td>Latest Underlying Price</td>
+            <td>{{ result.snapshot_data.underlying_price }}</td>
+        </tr>
+        <tr>
+            <td>Latest Option Price</td>
+            <td>{{ result.snapshot_data.option_price }}</td>
+        </tr>
+        <tr>
+            <td>Latest Delta</td>
+            <td>{{ result.snapshot_data.greeks.delta }}</td>
+        </tr>
+        <tr>
+            <td>Latest Theta</td>
+            <td>{{ result.snapshot_data.greeks.theta }}</td>
+        </tr>
     </table>
 
-    <h3>Data Preview:</h3>
+    <h3>Data Preview</h3>
     <table>
         <tr>
-            {% for key in result.data_preview[0].keys() %}
-            <th>{{ key }}</th>
-            {% endfor %}
+            <th>Date</th>
+            <th>Underlying Price</th>
+            <th>Option Price</th>
         </tr>
         {% for row in result.data_preview %}
         <tr>
-            {% for value in row.values() %}
-            <td>{{ value }}</td>
-            {% endfor %}
+            <td>{{ row.date }}</td>
+            <td>{{ row.underlying_price }}</td>
+            <td>{{ row.option_price }}</td>
         </tr>
         {% endfor %}
     </table>
